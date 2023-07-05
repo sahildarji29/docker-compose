@@ -1,0 +1,3 @@
+docker/data/certbot/*
+docker/data/mysql/*
+docker/data/nginx/logs/*

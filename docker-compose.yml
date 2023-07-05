@@ -1,0 +1,96 @@
+version: '3'
+services:
+    nginx:
+        image: nginx:latest
+        restart: unless-stopped
+        container_name: nginx
+        ports:
+            - 80:80
+            # - 443:443
+        volumes:
+            - ./www:/var/www/html
+            - ./docker/data/nginx/conf.d:/etc/nginx/conf.d
+            - ./docker/data/nginx/logs:/var/log/nginx
+            - ./docker/data/nginx/hosts:/etc/hosts
+            # - ./docker/data/certbot/conf:/etc/nginx/ssl
+            # - ./docker/data/certbot/data:/var/www/certbot
+        depends_on:
+            - php
+    # certbot install ssl
+    # certbot:
+    #     image: certbot/certbot:latest
+    #     command: certonly --webroot --webroot-path=/var/www/certbot --email info@codres.pl --agree-tos --no-eff-email -d testpro.local
+    #     volumes:
+    #         - ./docker/data/certbot/conf:/etc/letsencrypt
+    #         - ./docker/data/certbot/logs:/var/log/letsencrypt
+    #         - ./docker/data/certbot/data:/var/www/certbot
+    ## renew ssl
+    # certbot:
+    #     image: certbot/certbot:latest
+    #     command: certonly renew --force-renewal
+    #     volumes:
+    #         - ./docker/data/certbot/conf:/etc/letsencrypt
+    #         - ./docker/data/certbot/logs:/var/log/letsencrypt
+    #         - ./docker/data/certbot/data:/var/www/certbot
+    php:
+        build:
+            context: ./docker/php
+        container_name: php
+        restart: unless-stopped
+        volumes:
+            - ./www:/var/www/html
+        depends_on:
+            - redis
+            - db
+        user: 1000:1000
+        environment:
+            CONTAINER_ROLE: 'app'
+    scheduler:
+        build:
+            context: ./docker/php
+        container_name: scheduler
+        restart: unless-stopped
+        volumes:
+            - ./www:/var/www/html
+        user: 1000:1000
+        environment:
+            CONTAINER_ROLE: 'scheduler'
+        depends_on:
+            - php
+            - redis
+    queue:
+        build:
+            context: ./docker/php
+        container_name: queue
+        restart: unless-stopped
+        volumes:
+            - ./www:/var/www/html
+        depends_on:
+            - redis
+            - jobs
+            - php
+        user: 1000:1000
+        environment:
+            CONTAINER_ROLE: 'queue'
+            QUEUE: 'default'
+    db:
+        image: mysql/mysql-server:8.0
+        container_name: db
+        restart: unless-stopped
+        volumes:
+            - ./docker/data/mysql/:/var/lib/mysql
+        environment:
+            MYSQL_ROOT_HOST: '%'
+            MYSQL_ROOT_PASSWORD: '!AcgiSOD70d4n)4rFarxUh4n3tu'
+    redis:
+        image: 'redis:6.0'
+        container_name: redis
+        restart: unless-stopped
+        command: redis-server --requirepass p8JvPVR6synKbVs2Uyt
+    jobs:
+        image: 'redis:6.0'
+        container_name: jobs
+        restart: unless-stopped
+        command: redis-server --requirepass hDEkQTDV2AdSs32Lde3 --appendonly yes
+        volumes:
+            - ./docker/data/jobs:/data
