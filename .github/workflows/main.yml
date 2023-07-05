@@ -1,6 +1,5 @@
 name: Deploy
 
-
 on:
   push:
     branches:
@@ -9,6 +8,11 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
+    env:
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+      SSH_HOST: ${{ secrets.SSH_HOST }}
 
     steps:
       - name: Checkout code
@@ -25,9 +29,6 @@ jobs:
           sudo apt-get install docker-compose
 
       - name: Deploy to Server
-        env:
-          SSH_PORT: 22
-          SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
-          SSH_HOST: ${{ secrets.SSH_HOST }}
         run: |
-          ssh -o StrictHostKeyChecking=no -p $SSH_PORT $SSH_USERNAME@$SSH_HOST 'cd /var/www/docker && docker-compose down && docker-compose pull && docker-compose up -d'
+          export SSH_AUTH_SOCK=/tmp/ssh-XXXXXXZtFRt2/agent.1790
+          ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} 'cd /var/www/docker && docker-compose down && docker-compose pull && docker-compose up -d'
