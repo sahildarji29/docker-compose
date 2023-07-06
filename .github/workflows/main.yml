@@ -43,6 +43,6 @@ jobs:
 
       - name: Build and deploy
         run: |
-          cd /path/to/your/laravel/project
+          cd /var/www/mypro
           docker-compose pull
           docker-compose up -d
