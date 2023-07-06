@@ -27,13 +27,14 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: ./var/www/mypro
+          source: ./
+          target: /var/www/mypro
 
       - name: Set up Docker Compose
         run: |
           sudo apt-get update
           sudo apt-get install docker-compose -y
-          
+
       - name: Create Environment File
         run: |
           echo "SSH_PORT=22" >> .env
