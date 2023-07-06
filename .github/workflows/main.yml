@@ -1,0 +1,48 @@
+name: Laravel Deployment
+
+on:
+  push:
+    branches:
+      - master  # or the branch you want to trigger the deployment on
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.4.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}        
+
+      - name: Copy source code to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: ./
+          target: /var/www/mypro/
+
+      - name: Set up Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install docker-compose -y
+
+      - name: Create Environment File
+        run: |
+          echo "SSH_PORT=22" >> .env
+          echo "SSH_USERNAME=${{ secrets.SSH_USERNAME }}" >> .env
+          echo "SSH_HOST=${{ secrets.SSH_HOST }}" >> .env
+
+      - name: Build and deploy
+        run: |
+          cd /var/www/mypro
+          docker-compose pull
+          docker-compose up -d
