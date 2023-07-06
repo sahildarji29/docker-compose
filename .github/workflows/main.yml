@@ -43,6 +43,6 @@ jobs:
 
       - name: Build and deploy
         run: |
-          cd /var/www/mypro/
+          cd /var/www/mypro
           docker-compose pull
           docker-compose up -d
